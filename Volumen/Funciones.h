@@ -4,7 +4,6 @@
 #include "Cabecera.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 FILE* abrirArchivo(char *, int);
 void cerrarArchivo(FILE *);

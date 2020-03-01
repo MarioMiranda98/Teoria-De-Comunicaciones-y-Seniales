@@ -3,11 +3,12 @@
 float* crearFiltro(float *filtro, int cantidadMuestras) {
     int fMuestreo = 44100;
     int fCorte = 2000;
+    float rc = (1 / (2 * PI * fCorte));
 
-    double c = ((2 * PI * fCorte) / (fMuestreo));
+    double constante = (1 / (rc * fMuestreo));
 
     for (int t = 0; t < cantidadMuestras; t += 1) {
-        filtro[t] = exp(-t * c);
+        filtro[t] = exp(-t * constante);
     }
 
     return filtro;
@@ -50,8 +51,6 @@ void convolucion(char *archivo, char *archivoSalida) {
 
     filtro = crearFiltro(filtro, cantidadMuestras);
     conv = malloc(sizeof(float) * cantidadMuestras);
-    memset(conv, 0, sizeof(conv));
-    memset(respuesta, 0, sizeof(respuesta));
 
     for (int i = 0; i < numeroMuestras; i += 1) {
         fread(&muestra, sizeof(short), 1, (FILE *) dArchivo);

@@ -1,13 +1,14 @@
 #include "Funciones.h"
 
 FILE* abrirArchivo(char *archivo, int modo) {
-    char permiso[3];
     FILE* descriptor = NULL;
 
-    (modo == 1) ? strcpy(permiso, "rb") : strcpy(permiso, "wb");
-    descriptor = fopen(archivo, permiso);
+    if (modo == 1) 
+        descriptor = fopen(archivo, "rb"); 
+    else 
+        descriptor = fopen(archivo, "wb");
     
-    if(descriptor == NULL) {
+    if(descriptor == NULL) { 
         printf("No se pudo abrir el archivo\n");
         exit(EXIT_FAILURE);
     }

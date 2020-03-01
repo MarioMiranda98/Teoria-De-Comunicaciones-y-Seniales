@@ -1,0 +1,3 @@
+Para probar el primer programa:
+    *Generar un archivo wav con Goldwave de 0.016s a 2000 muestras por segundo 
+     y f(x) = ((N - n) / N - 0.5) * 2
