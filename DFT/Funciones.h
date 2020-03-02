@@ -18,7 +18,7 @@ char *obtenerPie(FILE *, char*, int);
 
 ///////Funciones para TDF//////////////////
 void cabeceraStereo(Cabecera *, FILE *);
-void colocarPie(Cabecera *, FILE *, char *);
+void colocarPie(FILE *, char *, int);
 ///////////////////////////////////////////
 
 int numeroDeMuestras(int, int);

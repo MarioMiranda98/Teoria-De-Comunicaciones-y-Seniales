@@ -36,26 +36,17 @@ void cerrarArchivo(FILE *dArchivo) {
 
 //--------------Funciones de obtencion señal entrada-------------//
 Cabecera *obtenerCabecera(Cabecera* c, FILE* dArchivo) {
-    fflush(dArchivo);
     fread(c, 44, 1, (FILE *) dArchivo);
-
     return c;
 }
 
-short *muestrearSenial(FILE* dArchivo, int numeroMuestras, short* signal) {
-    short muestra;
-
-    for(int i = 0; i < numeroMuestras; i++) {
-        fread(&muestra, sizeof(short), 1, (FILE *) dArchivo);
-        signal[i] = muestra;
-    }
-
+short *muestrearSenial(FILE* dArchivo, int numeroMuestras, short* signal) { 
+    fread(signal, sizeof(short) * numeroMuestras, 1, (FILE *) dArchivo);
     return signal;
 }
 
 char *obtenerPie(FILE* dArchivo, char* pie, int bytesPie) {
-    fread(pie, sizeof(char) * bytesPie, 1, (FILE *) dArchivo);
-
+    fread(pie, bytesPie, 1, (FILE *) dArchivo);
     return pie;
 }
 //!------Fin funciones de obtencion Señal de entrada-----------//
@@ -64,17 +55,16 @@ char *obtenerPie(FILE* dArchivo, char* pie, int bytesPie) {
 void cabeceraStereo(Cabecera* c, FILE* dArchivoSalida) {
     //Conversion cabecera (Mono a Stereo)
     c -> tamArchivo = (c -> tamArchivo + c -> tamSubBloque2);
-    c -> numeroCanales = (short) 2;
+    c -> numeroCanales = 2;
     c -> bps *= 2;
-    c -> alineamiento = (short) 4;
-    c -> bpm = (short) 16;
+    c -> alineamiento *= 2;
     c -> tamSubBloque2 = (c -> tamSubBloque2 * 2);
 
     fwrite(c, 44, 1, (FILE *) dArchivoSalida);
 }
 
-void colocarPie(Cabecera* c, FILE* dArchivoSalida, char *pie) {
-    fwrite(pie, sizeof(pie), 1, (FILE *) dArchivoSalida);
+void colocarPie(FILE* dArchivoSalida, char *pie, int bytesPie) {
+    fwrite(pie, sizeof(short) * bytesPie, 1, (FILE *) dArchivoSalida);
 }
 //!---------Fin Funciones de conversion a stereo---------------//
 
