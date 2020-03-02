@@ -64,7 +64,7 @@ void cabeceraStereo(Cabecera* c, FILE* dArchivoSalida) {
 }
 
 void colocarPie(FILE* dArchivoSalida, char *pie, int bytesPie) {
-    fwrite(pie, sizeof(short) * bytesPie, 1, (FILE *) dArchivoSalida);
+    fwrite(pie, sizeof(char) * bytesPie, 1, (FILE *) dArchivoSalida);
 }
 //!---------Fin Funciones de conversion a stereo---------------//
 
