@@ -12,11 +12,11 @@ de 1/N se aplico en el programa de la TDF).
 
 #include "FIDFT.h"
 
-int main(int argc, char *argv[]) {  
+int main(int argc, char **argv) {
     if(argc != 3) {
         printf("Entrada Invalida\n");
         printf("Ejemplo:\n");
-        printf("./Nombre Programa Archivo1.wav Archivo2.wav\n");
+        printf("./NombrePrograma Archivo1.wav Archivo2.wav");
         exit(EXIT_FAILURE);
     }
 
