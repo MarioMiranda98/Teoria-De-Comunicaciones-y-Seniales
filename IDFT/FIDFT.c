@@ -20,8 +20,8 @@ void preparacionIDFT(char* archivo, char* archivoSalida) {
 
     numeroMuestras = numeroDeMuestras(c -> tamSubBloque2, c -> bpm);
 
-    signal = malloc(sizeof(short) * numeroMuestras);
-    signal = muestrearSenial(dArchivo, numeroMuestras, signal);
+    signal = malloc(sizeof(short) * (numeroMuestras * 2));
+    signal = muestrearSenial(dArchivo, (numeroMuestras * 2), signal);
 
     bytesPie = (c -> tamArchivo) - (c -> tamSubBloque2) - 36;
     pie = malloc(sizeof(char) * bytesPie);
@@ -34,24 +34,15 @@ void preparacionIDFT(char* archivo, char* archivoSalida) {
     canal1 = malloc(sizeof(canal1) * (numeroMuestras / 2));
     canal2 = malloc(sizeof(canal2) * (numeroMuestras / 2));
 
-    canal1 = obtenerCanal1(signal, canal1, numeroMuestras);
-    canal2 = obtenerCanal2(signal, canal2, numeroMuestras);
+    canal1 = obtenerCanal1(signal, canal1, numeroMuestras / 2);
+    canal2 = obtenerCanal2(signal, canal2, numeroMuestras / 2);
 
-    signalIDFT = malloc(sizeof(double) * numeroMuestras);
+    signalIDFT = malloc(sizeof(double) * (numeroMuestras));
     signalIDFT = idft(canal1, canal2, signalIDFT, numeroMuestras);
 
     muestras = malloc(sizeof(short) * numeroMuestras);
 
-    for(int i = 0; i < numeroMuestras; i++) {
-        /*signalIDFT[i] /= 32767;
-
-        if(signalIDFT[i] > 1)
-            muestras[i] = 32767;
-        else if(signalIDFT[i] < -1)
-            muestras[i] = -32767;
-        else 
-            muestras[i] = signalIDFT[i] * 32767;*/
-
+    for(int i = 0; i < numeroMuestras; i++) { 
         muestras[i] = signalIDFT[i];
     }
 
@@ -73,27 +64,31 @@ void preparacionIDFT(char* archivo, char* archivoSalida) {
     free(muestras);
 }
 
-double *idft(short *canal1, short *canal2, double *siganlIDFT, int numeroMuestras) {
-    //Deduccion IDFT
-    //X[n] = Sum (X[k])* (cos() + jsin())
-    //X[n] = Sum (r + jw) *(cos() + jsin()
-    //X[n] = Sum r * cos() + r * sin() + jw * cos() - w sin()
-    //r * cos() - w sin()
-    //r * sin() + w cos()
-    //r -> canal1
-    //w -> canal2 
+double *idft(short *canal1, short *canal2, double *signalIDFT, int numeroMuestras) {
+    double cons = ((2 * PI) / (numeroMuestras / 2));
 
-    for(int k = 0; k < (numeroMuestras / 2); k++) {
-        siganlIDFT[2 * k] = 0;
-        siganlIDFT[(2 * k) + 1] = 0;
-        for(int n = 0; n < (numeroMuestras / 2); n++) {
-            siganlIDFT[2 * k] += (canal1[n] * cos((2 * PI * k * n) / numeroMuestras))
-                                -(canal2[n] * sin((2 * PI * k * n) / numeroMuestras));
+    for(int n = 0; n < (numeroMuestras / 2); n++) {
+        signalIDFT[2 * n] = 0;
+        signalIDFT[(2 * n) + 1] = 0;
 
-            siganlIDFT[(2 * k) + 1] += (canal1[n] * sin((2 * PI * k * n) / numeroMuestras))
-                                        +(canal2[n] * cos((2 * PI * k * n) / numeroMuestras));
+        for(int k = 0; k < (numeroMuestras / 2); k++) {
+            signalIDFT[2 * n] += ((canal1[k] * cos(cons * k * n)) - (canal2[k] * sin(cons * k * n)));
         }
+
+        if(signalIDFT[2 * n] > 32767)
+            signalIDFT[2 * n] = 32767;
+        else if(signalIDFT[2 * n] < -32768)
+            signalIDFT[2 * n] = -32768;
+
+        for(int k = 0; k < (numeroMuestras / 2); k++) {
+            signalIDFT[(2 * n) + 1] += ((canal1[k] * sin(cons * k * n)) + (canal2[k] * cos(cons * k * n)));
+        }
+
+        if(signalIDFT[(2 * n) + 1] > 32767)
+            signalIDFT[(2 * n) + 1] = 32767;
+        else if(signalIDFT[(2 * n) + 1] < -32768)
+            signalIDFT[(2 * n) + 1] = -32768;
     }
 
-    return siganlIDFT;
+    return signalIDFT;
 }

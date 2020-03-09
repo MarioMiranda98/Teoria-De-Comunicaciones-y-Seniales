@@ -41,19 +41,19 @@ Cabecera *obtenerCabecera(Cabecera* c, FILE* dArchivo) {
 }
 
 short *muestrearSenial(FILE* dArchivo, int numeroMuestras, short* signal) { 
-    fread(signal, sizeof(short) * numeroMuestras, 1, (FILE *) dArchivo);
+    fread(signal, numeroMuestras * sizeof(short), 1, (FILE *) dArchivo);
     return signal;
 }
 
 short *obtenerCanal1(short *signal, short *canal1, int numeroMuestras) {
-    for (int i = 0; i < (numeroMuestras / 2); i++)
+    for (int i = 0; i < (numeroMuestras); i++)
         canal1[i] = signal[2 * i];
 
     return canal1;
 }
 
 short *obtenerCanal2(short *signal, short *canal2, int numeroMuestras) {
-    for (int i = 0; i < (numeroMuestras / 2); i++)
+    for (int i = 0; i < (numeroMuestras); i++)
         canal2[i] = signal[(2 * i) + 1];
 
     return canal2;
@@ -84,4 +84,12 @@ void colocarPie(FILE* dArchivoSalida, char *pie, int bytesPie) {
 
 int numeroDeMuestras(int tamSubBloque2, int bpm) {
     return (tamSubBloque2 / (bpm / 8));
+}
+
+double absoluto(double valor) {
+    if (valor < 0) {
+        valor *= (-1);
+    }
+
+    return valor;
 }

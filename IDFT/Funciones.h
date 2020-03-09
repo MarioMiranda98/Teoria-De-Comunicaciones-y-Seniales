@@ -27,5 +27,6 @@ short *obtenerCanal2(short *, short *, int);
 ////////////////////////////////////////
 
 int numeroDeMuestras(int, int);
+double absoluto(double);
 
 #endif //!__FUNCIONES__
