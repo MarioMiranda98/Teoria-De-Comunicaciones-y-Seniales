@@ -9,23 +9,12 @@ FILE* abrirArchivo(char *, int);
 void cerrarArchivo(FILE *);
 //void manejarCabecera(Cabecera *, FILE *, FILE *);
 //void manejarPie(Cabecera *, FILE *, FILE *);
-
-///////Modificacion de funciones////////////////////
 Cabecera *obtenerCabecera(Cabecera *, FILE *);
 short *muestrearSenial(FILE *, int, short *);
 char *obtenerPie(FILE *, char*, int);
-///////////////////////////////////////////////////
-
-///////Funciones para TDF//////////////////
-void cabeceraStereo(Cabecera *, FILE *);
 void colocarPie(FILE *, char *, int);
-///////////////////////////////////////////
-
-//////Obtencion de canales///////////////
 short *obtenerCanal1(short *, short *, int);
 short *obtenerCanal2(short *, short *, int);
-////////////////////////////////////////
-
 int numeroDeMuestras(int, int);
 
 #endif //!__FUNCIONES__
