@@ -18,6 +18,10 @@ void multiplica(char* archivo1, char* archivo2, char* archivoSalida) {
     short* signal2 = NULL;
     double* signalMultiplicada = NULL;
     short* muestras = NULL;
+    short* canal1 = NULL;
+    short* canal2 = NULL;
+    short* canal3 = NULL;
+    short* canal4 = NULL;
     int tipo = 0;
 
     dArchivo1 = abrirArchivo(archivo1, 1);
@@ -42,12 +46,29 @@ void multiplica(char* archivo1, char* archivo2, char* archivoSalida) {
     signal1 = malloc(sizeof(short) * numMuestras1);
     signal2 = malloc(sizeof(short) * numMuestras2);
 
-    //#TODO: Muestrear Seañles estereo 
     if(numCanales1 == 1) 
         signal1 = muestrearSenial(dArchivo1, numMuestras1, signal1);
+    else if(numCanales1 == 2) {
+        signal1 = muestrearSenial(dArchivo1, numMuestras1, signal1);
+
+        canal1 = malloc(sizeof(short) * (numMuestras1 / 2));
+        canal1 = obtenerCanal1(signal1, canal1, (numMuestras1 / 2));
+
+        canal2 = malloc(sizeof(short) * (numMuestras1 / 2));
+        canal2 = obtenerCanal2(signal2, canal2, (numMuestras1 / 2));
+    }
     
     if(numCanales2 == 1)
         signal2 = muestrearSenial(dArchivo2, numMuestras2, signal2);
+    else if(numCanales2 == 2) {
+        signal2 = muestrearSenial(dArchivo2, numMuestras2, signal2);
+
+        canal3 = malloc(sizeof(short) * (numMuestras2 / 2));
+        canal3 = obtenerCanal1(signal2, canal3, (numMuestras2 / 2));
+
+        canal4 = malloc(sizeof(short) * (numMuestras2 / 2));
+        canal4 = obtenerCanal2(signal2, canal4, (numMuestras2 / 2));
+    }
 
     pie = obtenerPie(dArchivo1, pie, bytesPie);
 
@@ -79,6 +100,8 @@ void multiplica(char* archivo1, char* archivo2, char* archivoSalida) {
             fwrite(muestras, c2 -> tamSubBloque2, 1, (FILE *) dArchivoSalida);
             fwrite(pie, bytesPie, 1, (FILE *) dArchivoSalida);
         }
+    } else if(tipo == 2) {
+        //TODO: Completar multiplicacion estereo X estereo
     }
 
     cerrarArchivo(dArchivo1);
@@ -108,4 +131,8 @@ short* multiplicarMonoXMono(short* signalMayor, short* signalMenor, int muestras
         muestras[i] = 0;
     
     return muestras;
+}
+
+short *multiplicarStereoXStereo(short *canalMayorReal, short *canalMayorImag, short *canalMenorReal, short *canalMenorImag, int muestrasMayor, int muestrasMenor, double *signalMultiplicada, short *muestras) {
+
 }
