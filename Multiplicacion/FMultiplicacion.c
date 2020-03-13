@@ -55,7 +55,7 @@ void multiplica(char* archivo1, char* archivo2, char* archivoSalida) {
         canal1 = obtenerCanal1(signal1, canal1, (numMuestras1 / 2));
 
         canal2 = malloc(sizeof(short) * (numMuestras1 / 2));
-        canal2 = obtenerCanal2(signal2, canal2, (numMuestras1 / 2));
+        canal2 = obtenerCanal2(signal1, canal2, (numMuestras1 / 2));
     }
     
     if(numCanales2 == 1)
@@ -76,10 +76,7 @@ void multiplica(char* archivo1, char* archivo2, char* archivoSalida) {
         tipo = 1;
     else if((numCanales1 == 2) && (numCanales2 == 2))
         tipo = 2;
-    else if(((numCanales1 == 1) && (numCanales2 == 2)) || ((numCanales1 == 2) && (numCanales2 == 1)))
-        tipo = 3;
 
-    //#TODO: Añadir tipo estereoXestereo y monoXestero
     if(tipo == 1) {
         if(tamArchivo1 >= tamArchivo2) {
             //Archivo 1 mas grande
@@ -101,7 +98,25 @@ void multiplica(char* archivo1, char* archivo2, char* archivoSalida) {
             fwrite(pie, bytesPie, 1, (FILE *) dArchivoSalida);
         }
     } else if(tipo == 2) {
-        //TODO: Completar multiplicacion estereo X estereo
+       if(tamArchivo1 >= tamArchivo2) {
+           fwrite(c1, 44, 1, (FILE *) dArchivoSalida);
+           muestras = malloc(sizeof(short) * numMuestras1);
+
+           muestras = multiplicarStereoXStereo(canal1, canal2, canal3, canal4, (numMuestras1 / 2), (numMuestras2 / 2), muestras);
+           fwrite(muestras, c1 -> tamSubBloque2, 1, (FILE *) dArchivoSalida);
+           fwrite(pie, bytesPie, 1, (FILE *) dArchivoSalida);
+       } else {
+           fwrite(c2, 44, 1, (FILE *) dArchivoSalida);
+           muestras = malloc(sizeof(short) * numMuestras2);
+
+           muestras = multiplicarStereoXStereo(canal3, canal4, canal1, canal2, (numMuestras2 / 2), (numMuestras1 / 2), muestras);
+           fwrite(muestras, c2 -> tamSubBloque2, 1, (FILE *) dArchivoSalida);
+           fwrite(pie, bytesPie, 1, (FILE *) dArchivoSalida);
+       }
+        free(canal1);
+        free(canal2);
+        free(canal3);
+        free(canal4);
     }
 
     cerrarArchivo(dArchivo1);
@@ -116,7 +131,6 @@ void multiplica(char* archivo1, char* archivo2, char* archivoSalida) {
     free(pie);
 }
 
-//#TODO: implementar funciones de estereoXestereo y monoXmono
 short* multiplicarMonoXMono(short* signalMayor, short* signalMenor, int muestrasMayor, int muestrasMenor, double* signalMultiplicada, short* muestras) {
     for(int i = 0; i < muestrasMenor; i++) {
         signalMultiplicada[i] = (signalMayor[i] * signalMenor[i]);
@@ -133,6 +147,50 @@ short* multiplicarMonoXMono(short* signalMayor, short* signalMenor, int muestras
     return muestras;
 }
 
-short *multiplicarStereoXStereo(short *canalMayorReal, short *canalMayorImag, short *canalMenorReal, short *canalMenorImag, int muestrasMayor, int muestrasMenor, double *signalMultiplicada, short *muestras) {
+short *multiplicarStereoXStereo(short *canalMR, short *canalMI, short *canalMeR, short *canalMeI, int muestrasMayor, int muestrasMenor, short *muestras) {
+    double *res1 = malloc(sizeof(double) * muestrasMayor);
+    double *res2 = malloc(sizeof(double) * muestrasMayor);
+    double *res3 = malloc(sizeof(double) * muestrasMayor);
+    double *res4 = malloc(sizeof(double) * muestrasMayor);
+    double *c1 = malloc(sizeof(double) * muestrasMayor);
+    double *c2 = malloc(sizeof(double) * muestrasMayor);
 
+    res1 = multiplicar(canalMR, canalMeR, muestrasMayor, muestrasMenor, res1);
+    res2 = multiplicar(canalMI, canalMeI, muestrasMayor, muestrasMenor, res2);
+    res3 = multiplicar(canalMR, canalMeI, muestrasMayor, muestrasMenor, res3);
+    res4 = multiplicar(canalMI, canalMeR, muestrasMayor, muestrasMenor, res4);
+
+    for(int i = 0; i < muestrasMayor; i++) {
+        c1[i] = (res1[i] - res2[i]) / 2;
+        c2[i] = (res3[i] + res4[i]) / 2;
+    }
+
+    for(int i = 0; i < muestrasMayor; i++) {
+        muestras[2 * i] = c1[i];
+        muestras[(2 * i) + 1] = c2[i];
+    }
+
+    free(res1);
+    free(res2);
+    free(res3);
+    free(res4);
+    free(c1);
+    free(c2);
+
+    return muestras;
+}
+
+double *multiplicar(short *signalMayor, short *signalMenor, int muestrasMayor, int muestrasMenor, double *res) {
+    for(int i = 0; i < muestrasMenor; i++) {
+        res[i] = (signalMayor[i] * signalMenor[i]);
+        res[i] /= 32767;
+        
+        if(res[i] > 32767)
+            res[i] = 32767;
+    }
+
+    for(int i = muestrasMenor; i < muestrasMayor; i++)
+        res[i] = 0;
+
+    return res;
 }
