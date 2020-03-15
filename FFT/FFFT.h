@@ -3,7 +3,7 @@
 
 #include "Funciones.h"
 #include <math.h>
-#define PI #define PI 3.1415926535
+#define PI 3.1415926535
 
 struct Complejo {
     double real;
@@ -16,6 +16,6 @@ void preparacionFFT(char *, char *);
 int esPotenciaDos(int);
 Cabecera *modificarCabecera(Cabecera *, int, int);
 short *rellenar(short *, int, int);
-double *fft(int, int, Complejo **, Complejo **);
+double *fft(short *, int, int, Complejo **, Complejo **, double *, int);
 
 #endif // !__FFFT__
