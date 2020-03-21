@@ -20,8 +20,8 @@ void preparacionIDFT(char* archivo, char* archivoSalida) {
 
     numeroMuestras = numeroDeMuestras(c -> tamSubBloque2, c -> bpm);
 
-    signal = malloc(sizeof(short) * (numeroMuestras * 2));
-    signal = muestrearSenial(dArchivo, (numeroMuestras * 2), signal);
+    signal = malloc(sizeof(short) * (numeroMuestras));
+    signal = muestrearSenial(dArchivo, (numeroMuestras), signal);
 
     bytesPie = (c -> tamArchivo) - (c -> tamSubBloque2) - 36;
     pie = malloc(sizeof(char) * bytesPie);
