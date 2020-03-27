@@ -148,7 +148,7 @@ int esPotenciaDos(int numeroMuestras) { //1 Si es potencia de dos, 0 si no lo es
 }
 
 Cabecera *modificarCabecera(Cabecera *c, int numeroMuestras, int numeroMuestrasNuevo) {
-    int m = numeroMuestras - numeroMuestrasNuevo;
+    int m = numeroMuestrasNuevo - numeroMuestras;
     
     c -> tamArchivo += (m * 2);
     c -> tamSubBloque2 += (m * 2);
