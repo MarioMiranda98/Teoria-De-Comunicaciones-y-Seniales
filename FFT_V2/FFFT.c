@@ -4,18 +4,16 @@ void preparacionFFT(char *archivo, char *archivoSalida) {
     FILE *dArchivo = NULL;
     FILE *dArchivoSalida = NULL;
     short* signal = NULL;
-    double* signalFFT = NULL;
+    float* signalFFT = NULL;
     Cabecera *c = NULL;
-    Complejo **X = NULL;
-    Complejo **Y = NULL;
     int numeroMuestras = 0;
     int numeroMuestrasNuevo = 0;
     char* pie = NULL;
     int bytesPie = 0;
-    const int filas = 32;
-    int columnas = 0;
     short* muestras = NULL;
     int no = 0;
+    float *xr = NULL;
+    float *xi = NULL;
 
     c = malloc(sizeof(Cabecera));
 
@@ -40,16 +38,14 @@ void preparacionFFT(char *archivo, char *archivoSalida) {
 
         signal = rellenar(signal, numeroMuestras, numeroMuestrasNuevo);
 
-        columnas = numeroMuestrasNuevo / filas;
-        signalFFT = malloc(sizeof(double) * (numeroMuestrasNuevo * 2));
+        signalFFT = malloc(sizeof(float) * (numeroMuestrasNuevo * 2));
         muestras = malloc(sizeof(short) * (numeroMuestrasNuevo * 2));
         no = numeroMuestrasNuevo;
     } else {
         signal = malloc(sizeof(short) * numeroMuestras);
         signal = muestrearSenial(dArchivo, numeroMuestras, signal);
         
-        columnas = numeroMuestras / filas;
-        signalFFT = malloc(sizeof(double) * (numeroMuestras * 2));
+        signalFFT = malloc(sizeof(float) * (numeroMuestras * 2));
         muestras = malloc(sizeof(short) * (numeroMuestras * 2));
         no = numeroMuestras;
     }
@@ -57,15 +53,15 @@ void preparacionFFT(char *archivo, char *archivoSalida) {
     pie = obtenerPie(dArchivo, pie, bytesPie);
     cerrarArchivo(dArchivo);
 
-    X = malloc(sizeof(Complejo *) * filas);
-    Y = malloc(sizeof(Complejo *) * filas);
+    xr = malloc(sizeof(float) * no);
+    xi = malloc(sizeof(float) * no);
 
-    for(int i = 0; i < filas; i++) {
-        X[i] = malloc(sizeof(Complejo) * columnas);
-        Y[i] = malloc(sizeof(Complejo) * columnas);
+    for(int i = 0; i < no; i++) {
+        xr[i] = (float) signal[i];
+        xi[i] = 0.0;
     }
 
-    signalFFT = fft(signal, filas, columnas, X, Y, signalFFT, no);
+    signalFFT = fft(xr, xi, no, signalFFT);
 
     for(int i = 0; i < no * 2; i++)
         muestras[i] = signalFFT[i];
@@ -82,44 +78,69 @@ void preparacionFFT(char *archivo, char *archivoSalida) {
     free(signal);
     free(signalFFT);
     free(pie);
-    free(X);
-    free(Y);
     free(muestras);
+    free(xr);
+    free(xi);
 }
 
-double *fft(short *signal, int filas, int columnas, Complejo **X, Complejo **Y, double *signalFFT, int numeroMuesrtrasNuevas) {
-    for(int i = 0; i < filas; i++) {
-        for(int j = 0; j < columnas; j++) {
-            Y[i][j].real = 0;
-            Y[i][j].imaginario = 0;
+float *fft(float *xr, float *xi, int numeroMuestras, float *signalFFT) {
+    int m, n, i, j, k, j1;
+    float arg, s, c, tempr, tempi, w;
+    
+    m = log((float) numeroMuestras) / log(2.0);
 
-            for(int k = 0; k < columnas; k++) {
-                Y[i][j].real += signal[(filas * k) + i] * cos((2 * PI * j * k) / columnas);
-                Y[i][j].imaginario += (signal[(filas * k) + i] * sin((2 * PI * j * k) / columnas)) * (-1);
-            }
+    for(i = 0; i < numeroMuestras; ++i) {
+        j = 0;
+        for(k = 0; k < m; ++k) 
+            j = (j << 1) | (1 & (i >> k));
 
-            Y[i][j].real = ((Y[i][j].real * cos((2 * PI * i * j) / numeroMuesrtrasNuevas)) + (Y[i][j].imaginario * sin((2 * PI * i * j) / numeroMuesrtrasNuevas)));
-            Y[i][j].imaginario = ((Y[i][j].imaginario * cos((2 * PI * i * j) / numeroMuesrtrasNuevas)) - (Y[i][j].real * sin((2 * PI * i * j) / numeroMuesrtrasNuevas)));
+        if(j < i) {
+            swap(&xr[i], &xr[j]);
+            swap(&xi[i], &xi[j]);
         }
     }
 
-    for(int i = 0; i < filas; i++) {
-        for(int j = 0; j < columnas; j++) {
-            X[i][j].real = 0;
-            X[i][j].imaginario = 0;
-            for(int k = 0; k < filas; k++) {
-                X[i][j].real += ((Y[k][j].real * cos((2 * PI * i * k) / filas)) + (Y[k][j].imaginario * sin((2 * PI * i * k) / filas)));
-                X[i][j].imaginario += ((Y[k][j].imaginario * cos((2 * PI * i * k) / filas)) - (Y[k][j].real * sin((2 * PI * i * k) / filas)));
-            }
+    for(i = 0; i < m; i++) {
+        n = w = pow(2.0, (float) i);
+        w = PI / n;
 
-            X[i][j].real /= numeroMuesrtrasNuevas;
-            X[i][j].imaginario /= numeroMuesrtrasNuevas;
-            signalFFT[(2 * (i * columnas + j))] = X[i][j].real;
-            signalFFT[(2 * (i * columnas + j)) + 1] = X[i][j].imaginario;
-        } 
+        k = 0;
+
+        while(k < (numeroMuestras - 1)) {
+            for(j = 0; j < n; j++) {
+                arg = -j * w;
+                c = cos(arg);
+                s = sin(arg);
+                j1 = k + j;
+                tempr = xr[j1 + n] * c - xi[j1 + n] * s;
+                tempi = xi[j1 + n] * c + xr[j1 + n] * s;
+                xr[j1 + n] = xr[j1] - tempr;
+                xi[j1 + n] = xi[j1] - tempi;
+                xr[j1] = xr[j1] + tempr;
+                xi[j1] = xi[j1] + tempi; 
+            }
+            k += 2 * n;
+        }
+    }
+    arg = 1.0 / numeroMuestras;
+
+    for(i = 0; i < numeroMuestras; i++) {
+        xr[i] *= arg;
+        xi[i] *= arg;
+
+        signalFFT[2 * i] = xr[i];
+        signalFFT[(2 * i) + 1] = xi[i];
     }
 
     return signalFFT;
+}
+
+void swap(float *a, float *b) {
+    float aux;
+    
+    aux = *a;
+    *a = *b;
+    *b = aux; 
 }
 
 int esPotenciaDos(int numeroMuestras) { //1 Si es potencia de dos, 0 si no lo es
