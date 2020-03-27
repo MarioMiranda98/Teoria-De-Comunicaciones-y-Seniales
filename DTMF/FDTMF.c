@@ -6,8 +6,6 @@ void preparacionDTMF(char *archivo) {
     int numeroMuestras;
     double duracion;
     int fMuestreo;
-    double *xr = NULL;
-    double *xi = NULL;
     double *signalDFT = NULL;
     Cabecera *c = NULL;
     short *muestras = NULL;
@@ -20,8 +18,6 @@ void preparacionDTMF(char *archivo) {
     fMuestreo = c->frecuenciaMuestreo;
 
     signal = malloc(sizeof(short) * numeroMuestras);
-    xr = malloc(sizeof(double) * numeroMuestras);
-    xi = malloc(sizeof(double) * numeroMuestras);
     signalDFT = malloc(sizeof(double) * numeroMuestras * 2);
     muestras = malloc(sizeof(short) * numeroMuestras * 2);
 
@@ -39,8 +35,6 @@ void preparacionDTMF(char *archivo) {
     dtmf(muestras, duracion);
 
     free(c);
-    free(xr);
-    free(xi);
     free(signal);
     free(signalDFT);
 }
