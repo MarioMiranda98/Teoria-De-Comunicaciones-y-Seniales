@@ -4,7 +4,6 @@ void preparacionDTMF(char *archivo) {
     FILE *dArchivo = NULL;
     short* signal = NULL;
     int numeroMuestras;
-    double duracion;
     int fMuestreo;
     double *signalDFT = NULL;
     Cabecera *c = NULL;
@@ -26,24 +25,23 @@ void preparacionDTMF(char *archivo) {
     cerrarArchivo(dArchivo);
 
     signalDFT = tdf(numeroMuestras, signal, signalDFT);
-    duracion = (double)((double)fMuestreo / (double)numeroMuestras);
 
-    for(int i = 0; i < numeroMuestras * 2; i++) 
+    for(int i = 0; i < numeroMuestras * 2; i++) {
         muestras[i] = signalDFT[i];
-
+    }
   
-    dtmf(muestras, duracion);
+    dtmf(muestras, fMuestreo, numeroMuestras);
 
     free(c);
     free(signal);
     free(signalDFT);
 }
 
-void dtmf(short *muestras, double duracion) {
+void dtmf(short *muestras, int fMuestreo, int numeroMuestras) {
     int frecuenciasDTMF[8] = {697, 770, 852, 941, 1209, 1336, 1477, 1633 };
-    int posicion[2];
+    int posicion[8];
     int j, k;
-    j = k = 0;
+    j = 0;
     
     char teclado[4][4] = {
         {'1', '2', '3', 'A'},
@@ -55,29 +53,42 @@ void dtmf(short *muestras, double duracion) {
     short f;
 
     for(int i = 0; i < 8; i++) {
-        int pos = (int)(frecuenciasDTMF[i] / duracion);
+        int pos = (int)(frecuenciasDTMF[i] * (numeroMuestras / fMuestreo));
         f = absoluto(muestras[2 * pos]);
 
-        if(f > 7000) {
-            posicion[j++] = k;
-        }
+        if(f > 7000) 
+            posicion[i] = 1;
+        else 
+            posicion[i] = 0;
 
         f = absoluto(muestras[2 * pos + 1]);
-        if(f > 7000) {
-            posicion[j++] = k;
-        }
-
-        //printf("%d\n", f);
-
-        if(i == 3)
-            k = 0;
+        if(f > 7000) 
+            posicion[i] = 1;
         else 
-            k++;
+            posicion[i] = 0;
     }
 
-    //printf("[%d][%d]\n", posicion[0], posicion[1]);
+    for(int i = 0; i < 4; i++) {
+        if(posicion[i]) {
+            if(posicion[4]) {
+                printf("%c", teclado[i][0]);
+            }
+            
+            if(posicion[5]) {
+                printf("%c", teclado[i][1]);
+            }
 
-    printf("%c\n", teclado[posicion[0]][posicion[1]]);
+            if(posicion[6]) {
+                printf("%c", teclado[i][2]);
+            }
+
+            if(posicion[7]) {
+                printf("%c", teclado[i][3]);
+            }
+        }
+    }
+
+    printf("\n");
 }
 
 double *tdf(int numeroMuestras, short* signal, double* signalTDF) {

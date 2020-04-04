@@ -1,0 +1,163 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#define PI 3.1415926535
+
+struct Cabecera {
+    char riff[4];
+    int tamArchivo;
+    char wave[4]; 
+    
+    char fmt[4];
+    int tamSubBloque;
+    short tipoGrabacion;
+    short numeroCanales;
+    int frecuenciaMuestreo;
+    int bps;
+    short alineamiento;
+    short bpm;
+
+    char data[4];
+    int tamSubBloque2; 
+};
+
+typedef struct Cabecera Cabecera;
+
+FILE* abrirArchivo(char *, int);
+void cerrarArchivo(FILE *);
+Cabecera *obtenerCabecera(Cabecera *, FILE *);
+short *muestrearSenial(FILE *, int, short *);
+char *obtenerPie(FILE *, char*, int);
+void cabeceraStereo(Cabecera *, FILE *);
+void colocarPie(FILE *, char *, int);
+int numeroDeMuestras(int, int);
+void preparacionTDF(char *, char *);
+double *tdf(int, short *, double *);
+
+int main(int argc, char **argv) {
+    if(argc != 3) {
+        printf("Entrada incorrecta\n");
+        printf("Ejemplo:\n");
+        printf("./NombrePrograma Archivo1.wav Archivo2.wav\n");
+        exit(EXIT_FAILURE);
+    }
+
+    preparacionTDF(argv[1], argv[2]);
+}
+
+FILE* abrirArchivo(char *archivo, int modo) {
+    FILE* descriptor = NULL;
+
+    if (modo == 1) 
+        descriptor = fopen(archivo, "rb"); 
+    else 
+        descriptor = fopen(archivo, "wb");
+    
+    if(descriptor == NULL) { 
+        printf("No se pudo abrir el archivo\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return descriptor;
+}
+
+void cerrarArchivo(FILE *dArchivo) {
+    fclose(dArchivo);
+}
+
+Cabecera *obtenerCabecera(Cabecera* c, FILE* dArchivo) {
+    fread(c, 44, 1, (FILE *) dArchivo);
+    return c;
+}
+
+short *muestrearSenial(FILE* dArchivo, int numeroMuestras, short* signal) { 
+    fread(signal, sizeof(short) * numeroMuestras, 1, (FILE *) dArchivo);
+    return signal;
+}
+
+char *obtenerPie(FILE* dArchivo, char* pie, int bytesPie) {
+    fread(pie, bytesPie, 1, (FILE *) dArchivo);
+    return pie;
+}
+
+void cabeceraStereo(Cabecera* c, FILE* dArchivoSalida) {
+    //Conversion cabecera (Mono a Stereo)
+    c -> tamArchivo = (c -> tamArchivo + c -> tamSubBloque2);
+    c -> numeroCanales = 2;
+    c -> bps *= 2;
+    c -> alineamiento *= 2;
+    c -> tamSubBloque2 = (c -> tamSubBloque2 * 2);
+
+    fwrite(c, 44, 1, (FILE *) dArchivoSalida);
+}
+
+void colocarPie(FILE* dArchivoSalida, char *pie, int bytesPie) {
+    fwrite(pie, sizeof(char) * bytesPie, 1, (FILE *) dArchivoSalida);
+}
+
+int numeroDeMuestras(int tamSubBloque2, int bpm) {
+    return (tamSubBloque2 / (bpm / 8));
+}
+
+void preparacionTDF(char *archivo, char* archivoSalida) {
+    FILE* dArchivo = NULL;
+    FILE* dArchivoSalida = NULL;
+    Cabecera *c = malloc(sizeof(Cabecera));
+    int numeroMuestras = 0;
+    short* signal = NULL;
+    int bytesPie = 0;
+    double* signalTDF = NULL;
+    short* muestras = NULL;
+    char* pie = NULL;
+
+    dArchivo = abrirArchivo(archivo, 1);
+    dArchivoSalida = abrirArchivo(archivoSalida, 2);
+    
+    c = obtenerCabecera(c, dArchivo);
+ 
+    numeroMuestras = numeroDeMuestras(c -> tamSubBloque2, c -> bpm);
+    signal = malloc(sizeof(short) * numeroMuestras);
+    signal = muestrearSenial(dArchivo, numeroMuestras, signal);
+
+    bytesPie = (c -> tamArchivo) - (c -> tamSubBloque2) - 36;
+    pie = malloc(sizeof(char) * bytesPie);
+    pie = obtenerPie(dArchivo, pie, bytesPie);
+
+    cabeceraStereo(c, dArchivoSalida);
+    
+    signalTDF = malloc(sizeof(double) * numeroMuestras * 2);
+    muestras = malloc(sizeof(short) * numeroMuestras * 2);
+
+    signalTDF = tdf(numeroMuestras, signal, signalTDF);
+
+    for (int i = 0; i < numeroMuestras * 2; i++) { 
+        muestras[i] = signalTDF[i];
+    }
+
+    fwrite(muestras, c -> tamSubBloque2, 1, (FILE *) dArchivoSalida);
+
+    colocarPie(dArchivoSalida, pie, bytesPie);
+
+    free(muestras);
+    free(c);
+    free(signal);
+    free(signalTDF);
+    free(pie);
+    cerrarArchivo(dArchivoSalida);
+}
+
+double *tdf(int numeroMuestras, short* signal, double* signalTDF) {
+    for (int k = 0; k < numeroMuestras; k++) {
+        signalTDF[2 * k] = 0;
+        signalTDF[(2 * k) + 1] = 0;
+        for (int n = 0; n < numeroMuestras; n++) {
+            signalTDF[2 * k] += signal[n] * cos((2 * PI * k * n) / numeroMuestras);
+            signalTDF[(2 * k) + 1] += (signal[n] * sin((2 * PI* k * n) / numeroMuestras)) * (-1);
+        }
+        
+        signalTDF[2 * k] /= numeroMuestras;   
+        signalTDF[(2 * k) + 1] /= numeroMuestras;
+    }
+
+    return signalTDF;
+}

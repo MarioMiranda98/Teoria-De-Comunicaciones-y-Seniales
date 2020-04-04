@@ -9,7 +9,7 @@ void preparacionFFT(char *, char *);
 int esPotenciaDos(int);
 Cabecera *modificarCabecera(Cabecera *, int, int);
 short *rellenar(short *, int, int);
-float *fft(float *xr, float *xi, int numeroMuestras, float *signalFFT);
+float *fft(float *, float *, int, float *);
 void swap(float *a, float *b);
 
 #endif // !__FFFT__

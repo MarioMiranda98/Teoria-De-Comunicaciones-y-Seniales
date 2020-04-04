@@ -61,7 +61,7 @@ void preparacionFFT(char *archivo, char *archivoSalida) {
         xi[i] = 0.0;
     }
 
-    signalFFT = fft(xr, xi, no, signalFFT);
+    signalFFT = fft(xr, xi, numeroMuestras, signalFFT);
 
     for(int i = 0; i < no * 2; i++)
         muestras[i] = signalFFT[i];
