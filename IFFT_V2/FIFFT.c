@@ -105,20 +105,17 @@ float *ifft(float *xr, float *xi, int numeroMuestras, float *signalIFFT) {
                 j1 = k + j;
                 tempr = xr[j1 + n] * c - xi[j1 + n] * s;
                 tempi = xi[j1 + n] * c + xr[j1 + n] * s;
-                xr[j1 + n] = xr[j1] - tempr;
-                xi[j1 + n] = xi[j1] - tempi;
-                xr[j1] = xr[j1] + tempr;
-                xi[j1] = xi[j1] + tempi; 
+                xr[j1 + n] = xr[j1] + tempr;
+                xi[j1 + n] = xi[j1] + tempi;
+                xr[j1] = xr[j1] - tempr;
+                xi[j1] = xi[j1] - tempi; 
             }
             k += 2 * n;
         }
     }
-    arg = 1.0 / numeroMuestras;
+
 
     for(i = 0; i < numeroMuestras; i++) {
-        xr[i] *= arg;
-        xi[i] *= arg;
-
         signalIFFT[2 * i] = xr[i];
         signalIFFT[(2 * i) + 1] = xi[i];
     }
