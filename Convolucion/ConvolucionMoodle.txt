@@ -32,6 +32,17 @@ void convolucion(char *, char *);
 float* crearFiltro(float *, int);
 float absoluto(float);
 
+int main(int argc, char **argv) {
+    if(argc != 3) {
+        printf("Entrada incorrecta\n");
+        printf("Ejemplo:\n");
+        printf("./NombrePrograma Archivo1.wav Archivo2.wav\n");
+        exit(EXIT_FAILURE);
+    }
+
+    convolucion(argv[1], argv[2]);
+}
+
 FILE* abrirArchivo(char *archivo, int modo) {
     FILE* descriptor = NULL;
 
@@ -113,7 +124,6 @@ void convolucion(char *archivo, char *archivoSalida) {
     dArchivoSalida = abrirArchivo(archivoSalida, 2);
 
     manejarCabecera(c, dArchivo, dArchivoSalida);
-    mostrarCabecera(c, archivo);
 
     numeroMuestras = numeroDeMuestras(c -> tamSubBloque2, c -> bpm);
     entrada = malloc(sizeof(float) * numeroMuestras);

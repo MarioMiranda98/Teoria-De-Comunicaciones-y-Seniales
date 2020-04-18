@@ -7,7 +7,7 @@
 
 void preparacionDTMF(char *);
 double *tdf(int numeroMuestras, short* signal, double *);
-void dtmf(short *, int, int);
+void dtmf(short *, double);
 short absoluto(short);
 
 #endif // !__FDTMF__

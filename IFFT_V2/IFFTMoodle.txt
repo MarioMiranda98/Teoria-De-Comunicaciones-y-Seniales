@@ -1,4 +1,109 @@
-#include "FIFFT.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#define PI 3.1415926535
+
+struct Cabecera {
+    char riff[4];
+    int tamArchivo;
+    char wave[4];
+    
+    char fmt[4];
+    int tamSubBloque;
+    short tipoGrabacion;
+    short numeroCanales;
+    int frecuenciaMuestreo;
+    int bps;
+    short alineamiento;
+    short bpm;
+
+    char data[4];
+    int tamSubBloque2;
+};
+
+typedef struct Cabecera Cabecera;
+
+FILE* abrirArchivo(char *, int);
+void cerrarArchivo(FILE *);
+Cabecera *obtenerCabecera(Cabecera *, FILE *);
+short *muestrearSenial(FILE *, int, short *);
+char *obtenerPie(FILE *, char*, int);
+void cabeceraStereo(Cabecera *, FILE *);
+void colocarPie(FILE *, char *, int);
+short *obtenerCanal1(short *, short *, int);
+short *obtenerCanal2(short *, short *, int);
+int numeroDeMuestras(int, int);
+void preparacionIFFT(char *, char *);
+float *ifft(float *xr, float *xi, int numeroMuestras, float *signalIFFT);
+void swap(float *a, float *b);
+
+int main(int argc, char **argv) {
+    if(argc != 3) {
+        printf("Error en la entrada\n");
+        printf("Ejemplo:\n");
+        printf("./Nombre Programa archivo1.wav archivo2.wav\n");
+        exit(EXIT_FAILURE);
+    }
+
+    preparacionIFFT(argv[1], argv[2]);
+}
+
+FILE* abrirArchivo(char *archivo, int modo) {
+    FILE* descriptor = NULL;
+
+    if (modo == 1) 
+        descriptor = fopen(archivo, "rb"); 
+    else 
+        descriptor = fopen(archivo, "wb");
+    
+    if(descriptor == NULL) { 
+        printf("No se pudo abrir el archivo\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return descriptor;
+}
+
+void cerrarArchivo(FILE *dArchivo) {
+    fclose(dArchivo);
+}
+
+Cabecera *obtenerCabecera(Cabecera* c, FILE* dArchivo) {
+    fread(c, 44, 1, (FILE *) dArchivo);
+    return c;
+}
+
+short *muestrearSenial(FILE* dArchivo, int numeroMuestras, short* signal) { 
+    fread(signal, numeroMuestras * sizeof(short), 1, (FILE *) dArchivo);
+    return signal;
+}
+
+short *obtenerCanal1(short *signal, short *canal1, int numeroMuestras) {
+    for (int i = 0; i < (numeroMuestras); i++)
+        canal1[i] = signal[2 * i];
+
+    return canal1;
+}
+
+short *obtenerCanal2(short *signal, short *canal2, int numeroMuestras) {
+    for (int i = 0; i < (numeroMuestras); i++)
+        canal2[i] = signal[(2 * i) + 1];
+
+    return canal2;
+} 
+
+char *obtenerPie(FILE* dArchivo, char* pie, int bytesPie) {
+    fread(pie, bytesPie, 1, (FILE *) dArchivo);
+    return pie;
+}
+
+void colocarPie(FILE* dArchivoSalida, char *pie, int bytesPie) {
+    fwrite(pie, sizeof(char) * bytesPie, 1, (FILE *) dArchivoSalida);
+}
+
+int numeroDeMuestras(int tamSubBloque2, int bpm) {
+    return (tamSubBloque2 / (bpm / 8));
+}
 
 void preparacionIFFT(char *archivo, char *archivoSalida) {
     FILE *dArchivo = NULL;
@@ -20,7 +125,6 @@ void preparacionIFFT(char *archivo, char *archivoSalida) {
 
     dArchivo = abrirArchivo(archivo, 1);
     c = obtenerCabecera(c, dArchivo);
-    mostrarCabecera(c, archivo);
 
     numeroMuestras = numeroDeMuestras(c -> tamSubBloque2, c -> bpm);
     numeroMuestrasCanales = (numeroMuestras / 2);
